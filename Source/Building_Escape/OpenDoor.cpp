@@ -1,6 +1,7 @@
 // Copyright Nikola Aksentijevic 2020
 
 #include "OpenDoor.h"
+#include "Components/AudioComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
@@ -24,12 +25,8 @@ void UOpenDoor::BeginPlay()
 	CurrentYaw = InitialYaw;
 	OpenAngle -= InitialYaw;
 
-	// if (!PressurePlate)
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("%s ima kompomentu OpenDoor, a nema podesen PressurePlate"), *GetOwner()->GetName());
-	// }
-
-	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
+	FindPressurePlate();
+	FindAudioComponent();
 }
 
 // Called every frame
@@ -37,7 +34,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (TotalMassOfActors() > 50.f) // Lazy Evaluation prvi uslov
+	if (TotalMassOfActors() > MassToOpenDoor)
 	{
 		OpenDoor(DeltaTime);
 		DoorLastOpened = GetWorld()->GetTimeSeconds();
@@ -48,6 +45,23 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		{
 			CloseDoor(DeltaTime);
 		}
+	}
+}
+
+void UOpenDoor::FindAudioComponent()
+{
+	AudioComponent = GetOwner()->FindComponentByClass<UAudioComponent>();
+	if (!AudioComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s ne poseduje audio komponentu"), *GetOwner()->GetName());
+	}
+}
+
+void UOpenDoor::FindPressurePlate()
+{
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s ima kompomentu OpenDoor, a nema podesen PressurePlate"), *GetOwner()->GetName());
 	}
 }
 
@@ -62,6 +76,17 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 	// FRotator OpenDoor(0.f, OpenAngle, 0.f); // umesto OpenAngle moze i 0.f umesto, posto ga overridujemo na sl liniji
 	// OpenDoor.Yaw = FMath::FInterpTo(CurrentYaw, OpenAngle, DeltaTime, 2); //FInterpConstantTo, FInterpTo, Lerp
 	// GetOwner()->SetActorRotation(OpenDoor);
+
+	CloseDoorSound = false;
+	if (!AudioComponent)
+	{
+		return;
+	}
+	if (!OpenDoorSound)
+	{
+		AudioComponent->Play();
+		OpenDoorSound = true;
+	}
 }
 
 void UOpenDoor::CloseDoor(float DeltaTime)
@@ -70,19 +95,35 @@ void UOpenDoor::CloseDoor(float DeltaTime)
 	FRotator DoorRotation = GetOwner()->GetActorRotation();
 	DoorRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(DoorRotation);
+
+	OpenDoorSound = false;
+	if (!AudioComponent)
+	{
+		return;
+	}
+	if (!CloseDoorSound)
+	{
+		AudioComponent->Play();
+		CloseDoorSound = true;
+	}
 }
 
 float UOpenDoor::TotalMassOfActors() const
 {
 	float TotalMass = 0.f;
 	// Nadji sve overlapping actore
-	TArray<AActor*> OverlappingActors;
+	TArray<AActor *> OverlappingActors;
+	if (!PressurePlate)
+	{
+		return TotalMass;
+	}
 	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
 	// Sabiranje svih njihovih masa
-	for (AActor* Actor : OverlappingActors)
+	for (AActor *Actor : OverlappingActors)
 	{
 		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		// UE_LOG(LogTemp, Warning, TEXT("%s se nalazi na PressurePlate."), *Actor->GetName());
 	}
-	
+
 	return TotalMass;
 }
