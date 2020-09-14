@@ -23,7 +23,7 @@ void UGrabber::BeginPlay()
 	SetupInputComponent();
 }
 
-// Check for physics handle
+// Provera da li komponenta postoji
 void UGrabber::FindPhysicsHandle()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
@@ -94,7 +94,7 @@ FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
 	// 			  0,
 	// 			  5.f);
 
-	// Ray-cast out to a certain distance (reach)
+	// Ray-cast na odredjenu distancu (reach)
 	FHitResult Hit;
 	FCollisionQueryParams TraceParams(FName(TEXT("")), false, GetOwner());
 	GetWorld()->LineTraceSingleByObjectType(OUT Hit,

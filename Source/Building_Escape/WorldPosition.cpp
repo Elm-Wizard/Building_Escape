@@ -21,7 +21,7 @@ void UWorldPosition::BeginPlay()
 	FString ObjectName = GetOwner()->GetName(); // treba nam include za GameFramework/Actor.h
 	FString ObjectPosition = GetOwner()->GetActorLocation().ToString();
 
-	UE_LOG(LogTemp, Warning, TEXT("%s position in world is: %s"), *ObjectName, *ObjectPosition);
+	UE_LOG(LogTemp, Warning, TEXT("%s pozicija u svetu je: %s"), *ObjectName, *ObjectPosition);
 }
 
 // Called every frame
