@@ -23,6 +23,20 @@ void UGrabber::BeginPlay()
 	SetupInputComponent();
 }
 
+// Called every frame
+void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (!PhysicsHandle)
+	{
+		return;
+	}
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		PhysicsHandle->SetTargetLocation(GetPlayersReach());
+	}
+}
+
 // Provera da li komponenta postoji
 void UGrabber::FindPhysicsHandle()
 {
@@ -65,20 +79,6 @@ void UGrabber::Release()
 		return;
 	}
 	PhysicsHandle->ReleaseComponent();
-}
-
-// Called every frame
-void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (!PhysicsHandle)
-	{
-		return;
-	}
-	if (PhysicsHandle->GrabbedComponent)
-	{
-		PhysicsHandle->SetTargetLocation(GetPlayersReach());
-	}
 }
 
 FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
